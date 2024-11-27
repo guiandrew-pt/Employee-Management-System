@@ -1,0 +1,100 @@
+﻿@page "/delete-employee/{id:int}"
+
+@using DTOs
+@inject Services.EmployeeService EmployeeService
+@inject NavigationManager NavigationManager
+
+<h3>Delete Employee</h3>
+
+<hr />
+
+@if (isLoading)
+{
+    <p class="text-danger">An error occurred while loading the employee data. Please try again later.</p>
+}
+else if (employee is not null)
+{
+    <div class="form-group">
+        <label for="FirstName">First Name:</label>
+        <p id="FirstName">@employee.FirstName</p>
+    </div>
+
+    <div class="form-group">
+        <label for="LastName">Last Name:</label>
+        <p id="LastName">@employee.LastName</p>
+    </div>
+
+    <div class="form-group">
+        <label for="Email">Email:</label>
+        <p id="Email">@employee.Email</p>
+    </div>
+
+    <div class="form-group">
+        <label for="Phone">Phone:</label>
+        <p id="Phone">@employee.Phone</p>
+    </div>
+
+    <div class="form-group">
+        <label for="Department">Department:</label>
+        <p id="Department">@employee.Department</p>
+    </div>
+
+    <div class="form-group">
+        <label for="DateOfBirth">Date Of Birth:</label>
+        <p id="DateOfBirth">@employee.DateOfBirth.ToShortDateString()</p>
+    </div>
+
+    <button class="btn btn-danger" style="margin-top: 5px" @onclick="HandleDelete">Delete</button>
+    <button type="button" class="btn btn-secondary" style="margin-top: 5px" @onclick="NavigateBack">Cancel</button>
+}
+else
+{
+    <p><em>Employee not found.</em></p>
+}
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="alert alert-danger" role="alert">
+        @errorMessage
+    </div>
+}
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private EmployeeDTO? employee = new EmployeeDTO();
+
+    private string errorMessage = "";
+
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Id is not 0)
+        {
+            employee = await EmployeeService.GetEmployeeByIdAsync(Id);
+
+            if (employee is null)
+            {
+                errorMessage = "Employee not found.";
+                NavigateBack();
+            }
+        }
+
+        isLoading = false; // Once the employee data is loaded, hide the loading message
+    }
+
+    private async Task HandleDelete()
+    {
+        //  Delete the employee
+        await EmployeeService.DeleteEmployeeAsync(Id);
+        NavigateBack();
+    }
+
+    private void NavigateBack()
+    {
+        NavigationManager.NavigateTo("/employees");
+    }
+}
+

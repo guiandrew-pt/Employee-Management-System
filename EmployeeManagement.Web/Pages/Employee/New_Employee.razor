@@ -1,0 +1,71 @@
+﻿@page "/new-employee"
+
+@using DTOs
+@inject Services.EmployeeService EmployeeService
+@inject NavigationManager NavigationManager
+
+<h3>Add New Employee</h3>
+
+<hr />
+
+<EditForm Model="@employee" OnValidSubmit="HandleValidSubmit">
+    <DataAnnotationsValidator />
+
+    <div class="form-group">
+        <label for="FirstName">First Name:</label>
+        <InputText id="FirstName" class="form-control" @bind-Value="@employee.FirstName" />
+        <ValidationMessage For="@(() => employee.FirstName)" />
+    </div>
+    <div class="form-group">
+        <label for="LastName">Last Name:</label>
+        <InputText id="LastName" class="form-control" @bind-Value="@employee.LastName" />
+        <ValidationMessage For="@(() => employee.LastName)" />
+    </div>
+    <div class="form-group">
+        <label for="Email">Email:</label>
+        <InputText id="Email" class="form-control" @bind-Value="@employee.Email" />
+        <ValidationMessage For="@(() => employee.Email)" />
+    </div>
+    <div class="form-group">
+        <label for="Phone">Phone Number:</label>
+        <InputText id="Phone" class="form-control" @bind-Value="@employee.Phone" placeholder="(123) 456-7890" />
+        <ValidationMessage For="@(() => employee.Phone)" />
+    </div>
+    <div class="form-group">
+        <label for="Department">Department:</label>
+        <InputText id="Department" class="form-control" @bind-Value="@employee.Department" />
+        <ValidationMessage For="@(() => employee.Department)" />
+    </div>
+    <div class="form-group">
+        <label for="DateOfBirth">Date Of Birth:</label>
+        <InputDate id="DateOfBirth" class="form-control" @bind-Value="@employee.DateOfBirth" />
+        <ValidationMessage For="@(() => employee.DateOfBirth)" />
+    </div>
+
+    <button type="submit" class="btn btn-success" style="margin-top: 5px">Save</button>
+    <button type="button" class="btn btn-secondary" style="margin-top: 5px" @onclick="NavigateBack">Cancel</button>
+</EditForm>
+
+@code {
+    private EmployeeDTO employee = new EmployeeDTO();
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Initialize with a specific date: January 1, 2006
+        employee.DateOfBirth = new DateTime(2006, 1, 1);
+
+        await Task.CompletedTask;
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        await EmployeeService.CreateEmployeeAsync(employee);
+        NavigateBack();
+    }
+
+    private void NavigateBack()
+    {
+        NavigationManager.NavigateTo("/employees"); // Navigate back to the employees list
+    }
+}
+

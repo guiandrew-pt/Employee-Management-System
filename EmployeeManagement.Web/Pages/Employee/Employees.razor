@@ -1,0 +1,123 @@
+﻿@page "/employees"
+
+@using DTOs
+@using ViewModels
+@inject Services.EmployeeService EmployeeService
+@inject NavigationManager NavigationManager
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h3>Employees</h3>
+
+    <NavLink class="btn btn-outline-primary" href="new-employee">
+        <span class="oi oi-plus" aria-hidden="true">Add New Employee</span>
+    </NavLink>
+</div>
+
+@if (employees is null)
+{
+    <p><em>Something went wrong...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Department</th>
+                <th>Date of Birth</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (EmployeeDTO employee in employees)
+            {
+                <tr>
+                    <td>@employee.FullName</td>
+                    <td>@employee.Email</td>
+                    <td>@employee.Phone</td>
+                    <td>@employee.Department</td>
+                    <td>@employee.DateOfBirth.ToString("MM/dd/yyyy")</td>
+                    <td>
+                        <button class="btn btn-primary" @onclick="() => NavigateToEdit(employee.Id)">Edit</button>
+                        <button class="btn btn-danger" @onclick="() => DeleteEmployee(employee.Id)">Delete</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <!-- Pagination Controls -->
+    <div class="pagination">
+        <button class="btn btn-secondary" @onclick="PreviousPage" disabled="@(!CanGoBack)">Previous</button>
+        <button class="btn btn-secondary" @onclick="NextPage" disabled="@(!CanGoNext)">Next</button>
+        <p>Page @pageNumber of @totalPages (Total Records: @totalRecords)</p>
+    </div>
+}
+
+@code {
+    private List<EmployeeDTO>? employees;
+
+    private int pageNumber = 1;
+    private int pageSize = 10;
+    private int totalRecords; // To hold the total number of employees
+    private int totalPages;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadEmployees();
+    }
+
+    private async Task LoadEmployees()
+    {
+        PaginatedResponse<EmployeeDTO>? response = await EmployeeService.GetAllEmployeesAsync(pageNumber, pageSize);
+
+        if (response != null)
+        {
+            employees = response.Data; // Update the employees list with the new page data
+            totalRecords = response.TotalRecords; // Update the total records
+            totalPages = (int)Math.Ceiling((double)totalRecords / pageSize); // Recalculate total pages
+        }
+        else
+        {
+            employees = new List<EmployeeDTO>(); // Clear employees if no response
+            totalRecords = 0;
+            totalPages = 0;
+        }
+    }
+
+    private void NavigateToEdit(int employeeId)
+    {
+        // Navigate to the edit page for the selected employee
+        NavigationManager?.NavigateTo($"/edit-employee/{employeeId}");
+    }
+
+    private void DeleteEmployee(int employeeId)
+    {
+        // Navigate to the delete page for the selected employee
+        NavigationManager?.NavigateTo($"/delete-employee/{employeeId}");
+    }
+
+    private bool CanGoBack => pageNumber > 1;
+    private bool CanGoNext => pageNumber < totalPages;
+
+    private async Task PreviousPage()
+    {
+        if (CanGoBack)
+        {
+            pageNumber--; // Decrement the page number
+            await LoadEmployees(); // Reload data
+        }
+    }
+
+    private async Task NextPage()
+    {
+        if (CanGoNext)
+        {
+            pageNumber++; // Increment the page number
+            await LoadEmployees(); // Reload data
+        }
+    }
+}
+
